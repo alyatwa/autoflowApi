@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String            @id @default(uuid())
+  createdAt      DateTime          @default(now())
+  username       String?           @unique @db.VarChar(20)
+  name           String?
+  email          String            @unique
+  password       String
+  emailConfirmed Boolean           @default(false)
+  roleId         String
+  role           Role              @relation(fields: [roleId], references: [id])
+  phone          Int?
+  planId         String
+  plan           Plan              @relation(fields: [planId], references: [id])
+  projects       UsersOnProjects[]
+}
+
+model Role {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  title     String
+  User      User[]
+}
+
+model Project {
+  id        String            @id @default(dbgenerated("nanoid()")) @db.VarChar(22)
+  createdAt DateTime          @default(now())
+  name      String
+  units     Unit[]
+  users     UsersOnProjects[]
+}
+
+model Unit {
+  id          String    @id @default(dbgenerated("nanoid()")) @db.VarChar(22)
+  createdAt   DateTime  @default(now())
+  name        String
+  description String?
+  projectId   String
+  project     Project   @relation(fields: [projectId], references: [id])
+  session     Session[]
+}
+
+model Session {
+  id        String   @id @default(dbgenerated("nanoid()")) @db.VarChar(22)
+  createdAt DateTime @default(now())
+  tag       String
+  unitId    String
+  unit      Unit     @relation(fields: [unitId], references: [id])
+  flow      Flow[]
+}
+
+model Flow {
+  id          String   @id @default(dbgenerated("nanoid()")) @db.VarChar(22)
+  createdAt   DateTime @default(now())
+  title       String
+  description String?
+  status      Int
+  sessionId   String
+  metadata    Json?
+  session     Session  @relation(fields: [sessionId], references: [id])
+}
+
+model Plan {
+  id            String   @id @default(uuid())
+  createdAt     DateTime @default(now())
+  name          String
+  description   String
+  features      String[]
+  monthlyPrice  Int
+  yearlyPrice   Int
+  unitsLimit    Int
+  sessionsLimit Int
+  projectsLimit Int
+  user          User[]
+}
+
+model UsersOnProjects {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     String // relation scalar field (used in the `@relation` attribute above)
+  project    Project  @relation(fields: [projectId], references: [id])
+  projectId  String // relation scalar field (used in the `@relation` attribute above)
+  assignedAt DateTime @default(now())
+
+  @@id([userId, projectId])
+}
