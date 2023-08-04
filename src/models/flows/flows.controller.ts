@@ -9,7 +9,7 @@ import {
     UseFilters,
   } from '@nestjs/common';
   import { FlowsService } from './flows.service';
-  import { Flow as FlowModel } from '@prisma/client';
+  import { Flow as FlowModel, Prisma } from '@prisma/client';
   import { HttpExceptionFilter } from 'src/filters/http-exception.filter';
   
   @Controller('flows')
@@ -34,10 +34,8 @@ import {
     }
   
     @Post()
-    public async createFlow(
-      @Body() flow: FlowModel,
-    ): Promise<FlowModel> {
-      return this.flowsService.create(flow);
+    public async createFlow(@Body() flow: Prisma.FlowCreateWithoutSessionInput, where:{unitId: string; tag: string }): Promise<FlowModel> {
+      return this.flowsService.create(flow, where);
     }
   
     @Put(':id')
